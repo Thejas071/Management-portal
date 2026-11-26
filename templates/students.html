@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block title %}MEVI Student Portal — Students{% endblock %}
+{% block content %}
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="{{ url_for('dashboard') }}" aria-label="MEVI Student Portal dashboard">
+      <span class="brand-mark">M</span><span class="brand-copy"><strong>MEVI</strong><small>Student Portal</small></span>
+    </a>
+    <div class="workspace-label">WORKSPACE</div>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a class="nav-link" href="{{ url_for('dashboard') }}"><span class="nav-icon">⌂</span>Dashboard</a>
+      <a class="nav-link active" href="{{ url_for('students') }}" aria-current="page"><span class="nav-icon">♙</span>Students<span class="nav-count">{{ students|length }}</span></a>
+      <a class="nav-link" href="{{ url_for('dashboard') }}"><span class="nav-icon">▤</span>Courses</a>
+      <a class="nav-link" href="{{ url_for('dashboard') }}"><span class="nav-icon">◷</span>Attendance</a>
+      <a class="nav-link" href="{{ url_for('dashboard') }}"><span class="nav-icon">☷</span>Assignments</a>
+      <a class="nav-link" href="{{ url_for('dashboard') }}"><span class="nav-icon">◉</span>Announcements</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="workspace-label">PREFERENCES</div>
+      <a class="nav-link" href="{{ url_for('dashboard') }}"><span class="nav-icon">⚙</span>Settings</a>
+      <div class="sidebar-profile">
+        <div class="avatar avatar-admin">AM</div>
+        <div class="profile-copy"><strong>Alex Morgan</strong><small>Administrator</small></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-panel">
+    <header class="topbar">
+      <button class="icon-button menu-button" id="menu-button" type="button" aria-label="Toggle navigation">☰</button>
+      <div class="breadcrumb"><span>Workspace</span><b>/</b><strong>Students</strong></div>
+      <div class="topbar-actions">
+        <span class="date-label" id="today-label"></span>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark mode">
+          <span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Dark mode</span>
+        </button>
+        <a class="icon-button notification-button" href="{{ url_for('dashboard') }}" aria-label="View announcements" title="Announcements">♧<i></i></a>
+        <div class="avatar avatar-admin top-avatar">AM</div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div id="flash-messages">
+            {% for category, message in messages %}
+              <div class="toast {{ category }}" role="status">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <div class="page-heading">
+        <div><h1>Students</h1><p>Manage student records, enrollment details and academic status.</p></div>
+        <div class="heading-actions"><a class="button primary" href="#add-student"><span class="plus">+</span>Add student</a></div>
+      </div>
+
+      <section class="panel" id="add-student" style="margin-bottom:17px">
+        <div class="panel-heading"><div><h2>Add a student</h2><p>Create a new student record.</p></div></div>
+        <form class="field-grid" action="{{ url_for('add_student') }}" method="post">
+          <div class="field">
+            <label for="student-name">Full name</label>
+            <input id="student-name" name="name" type="text" placeholder="Student name" required>
+          </div>
+          <div class="field">
+            <label for="student-email">Email address</label>
+            <input id="student-email" name="email" type="email" placeholder="student@example.edu" required>
+          </div>
+          <div class="field full">
+            <label for="student-course">Course</label>
+            <input id="student-course" name="course" type="text" placeholder="MCA, BCA, MBA..." required>
+          </div>
+          <div class="heading-actions" style="grid-column:1/-1"><button class="button primary" type="submit">Save student</button></div>
+        </form>
+      </section>
+
+      <div class="toolbar">
+        <label class="search-wrap"><span>⌕</span><input type="search" id="student-search" placeholder="Search by name or email..." aria-label="Search students"></label>
+        <span class="field-hint" id="student-count">{{ students|length }} student{{ '' if students|length == 1 else 's' }}</span>
+      </div>
+
+      <section class="table-panel student-table">
+        <div class="data-table-wrap">
+          {% if students %}
+          <table class="data-table" id="student-table">
+            <thead><tr><th>STUDENT</th><th>ID</th><th>EMAIL</th><th>COURSE</th><th>ENROLLED</th><th>STATUS</th><th></th></tr></thead>
+            <tbody>
+              {% for student in students %}
+              <tr class="student-row" data-search="{{ (student.name ~ ' ' ~ student.email ~ ' ' ~ student.course)|lower }}">
+                <td>
+                  <div class="student-cell">
+                    <span class="avatar">{% set parts = student.name.split() %}{{ ((parts[0][0] if parts else '') ~ (parts[1][0] if parts|length > 1 else ''))|upper }}</span>
+                    <strong>{{ student.name }}</strong>
+                  </div>
+                </td>
+                <td>#{{ student.id }}</td>
+                <td>{{ student.email }}</td>
+                <td>{{ student.course }}</td>
+                <td>{{ student.created_at[:10] if student.created_at else '—' }}</td>
+                <td><span class="badge active">Active</span></td>
+                <td>
+                  <form action="{{ url_for('delete_student', student_id=student.id) }}" method="post" onsubmit="return confirm('Delete {{ student.name|e }}?');">
+                    <button class="row-action delete" type="submit" aria-label="Delete {{ student.name }}" title="Delete">⌫</button>
+                  </form>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          <div class="empty-state" id="student-empty" hidden><strong>No students found</strong>Try changing your search.</div>
+          {% else %}
+          <div class="empty-state"><strong>No students yet</strong>Add the first student using the form above.</div>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<div class="mobile-overlay" id="mobile-overlay"></div>
+
+<script>
+  document.getElementById("today-label").textContent = new Date().toLocaleDateString(undefined, {
+    weekday: "short", day: "numeric", month: "short", year: "numeric"
+  });
+
+  const themeToggle = document.getElementById("theme-toggle");
+  const applyTheme = (theme) => {
+    document.documentElement.dataset.theme = theme;
+    const dark = theme === "dark";
+    themeToggle.querySelector(".theme-toggle-icon").textContent = dark ? "☀" : "☾";
+    themeToggle.querySelector(".theme-toggle-label").textContent = dark ? "Light mode" : "Dark mode";
+  };
+  applyTheme(document.documentElement.dataset.theme || "light");
+  themeToggle.addEventListener("click", () => {
+    const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+    applyTheme(next);
+    try { localStorage.setItem("edumanage.theme", next); } catch (_) {}
+  });
+
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("mobile-overlay");
+  document.getElementById("menu-button").addEventListener("click", () => {
+    sidebar.classList.toggle("open");
+    overlay.classList.toggle("show");
+  });
+  overlay.addEventListener("click", () => {
+    sidebar.classList.remove("open");
+    overlay.classList.remove("show");
+  });
+
+  const search = document.getElementById("student-search");
+  if (search) {
+    search.addEventListener("input", () => {
+      const query = search.value.trim().toLowerCase();
+      let visible = 0;
+      document.querySelectorAll(".student-row").forEach((row) => {
+        const matches = row.dataset.search.includes(query);
+        row.hidden = !matches;
+        if (matches) visible++;
+      });
+      document.getElementById("student-count").textContent = `${visible} student${visible === 1 ? "" : "s"}`;
+      const empty = document.getElementById("student-empty");
+      if (empty) empty.hidden = visible !== 0;
+    });
+  }
+</script>
+{% endblock %}

@@ -73,6 +73,7 @@
   let sidebarOpen = false;
   const content = document.getElementById("page-content");
   const modalRoot = document.getElementById("modal-root");
+  if (!content || !modalRoot) return;
   const themeToggle = document.getElementById("theme-toggle");
   const esc = (value = "") => String(value).replace(/[&<>"']/g, (char) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
